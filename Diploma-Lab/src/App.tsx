@@ -1,22 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 const FONTS = [
-  { label: 'Clásica Cursiva',    value: 'TimesRomanBoldItalic', preview: 'Georgia, serif',          style: 'italic bold', file: null },
-  { label: 'Formal',             value: 'TimesRoman',            preview: 'Georgia, serif',          style: 'normal',      file: null },
-  { label: 'Formal Negrita',     value: 'TimesRomanBold',        preview: 'Georgia, serif',          style: 'bold',        file: null },
-  { label: 'Formal Cursiva',     value: 'TimesRomanItalic',      preview: 'Georgia, serif',          style: 'italic',      file: null },
-  { label: 'Moderna',            value: 'Helvetica',             preview: 'Arial, sans-serif',       style: 'normal',      file: null },
-  { label: 'Moderna Negrita',    value: 'HelveticaBold',         preview: 'Arial, sans-serif',       style: 'bold',        file: null },
-  { label: 'Dancing Script',     value: 'DancingScript',         preview: 'Dancing Script, cursive', style: 'bold',        file: '/fonts/DancingScript-Bold.ttf' },
-  { label: 'Great Vibes',        value: 'GreatVibes',            preview: 'Great Vibes, cursive',    style: 'normal',      file: '/fonts/GreatVibes-Regular.ttf' },
-  { label: 'Playfair Display',   value: 'PlayfairDisplay',       preview: 'Playfair Display, serif', style: 'italic bold', file: '/fonts/PlayfairDisplay-BoldItalic.ttf' },
-  { label: 'Cinzel',             value: 'Cinzel',                preview: 'Cinzel, serif',           style: 'bold',        file: '/fonts/Cinzel-Bold.ttf' },
-  { label: 'Montserrat',         value: 'Montserrat',            preview: 'Montserrat, sans-serif',  style: 'bold',        file: '/fonts/Montserrat-Bold.ttf' },
-  { label: 'Raleway',            value: 'Raleway',               preview: 'Raleway, sans-serif',     style: 'italic bold', file: '/fonts/Raleway-BoldItalic.ttf' },
-  { label: 'Pacifico',           value: 'Pacifico',              preview: 'Pacifico, cursive',       style: 'normal',      file: '/fonts/Pacifico-Regular.ttf' },
-  { label: 'Sacramento',         value: 'Sacramento',            preview: 'Sacramento, cursive',     style: 'normal',      file: '/fonts/Sacramento-Regular.ttf' },
-  { label: 'Satisfy',            value: 'Satisfy',               preview: 'Satisfy, cursive',        style: 'normal',      file: '/fonts/Satisfy-Regular.ttf' },
+  { label: 'Clásica Cursiva',  value: 'TimesRomanBoldItalic', preview: 'Georgia, serif',           style: 'italic bold', file: null },
+  { label: 'Formal',           value: 'TimesRoman',            preview: 'Georgia, serif',           style: 'normal',      file: null },
+  { label: 'Formal Negrita',   value: 'TimesRomanBold',        preview: 'Georgia, serif',           style: 'bold',        file: null },
+  { label: 'Formal Cursiva',   value: 'TimesRomanItalic',      preview: 'Georgia, serif',           style: 'italic',      file: null },
+  { label: 'Moderna',          value: 'Helvetica',             preview: 'Arial, sans-serif',        style: 'normal',      file: null },
+  { label: 'Moderna Negrita',  value: 'HelveticaBold',         preview: 'Arial, sans-serif',        style: 'bold',        file: null },
+  { label: 'Great Vibes',      value: 'GreatVibes',            preview: 'Great Vibes, cursive',     style: 'normal',      file: '/fonts/GreatVibes-Regular.ttf' },
+  { label: 'Pacifico',         value: 'Pacifico',              preview: 'Pacifico, cursive',        style: 'normal',      file: '/fonts/Pacifico-Regular.ttf' },
+  { label: 'Sacramento',       value: 'Sacramento',            preview: 'Sacramento, cursive',      style: 'normal',      file: '/fonts/Sacramento-Regular.ttf' },
+  { label: 'Satisfy',          value: 'Satisfy',               preview: 'Satisfy, cursive',         style: 'normal',      file: '/fonts/Satisfy-Regular.ttf' },
+  { label: 'Kaushan Script',   value: 'KaushanScript',         preview: 'Kaushan Script, cursive',  style: 'normal',      file: '/fonts/KaushanScript-Regular.ttf' },
+  { label: 'Allura',           value: 'Allura',                preview: 'Allura, cursive',          style: 'normal',      file: '/fonts/Allura-Regular.ttf' },
+  { label: 'Pinyon Script',    value: 'PinyonScript',          preview: 'Pinyon Script, cursive',   style: 'normal',      file: '/fonts/PinyonScript-Regular.ttf' },
+  { label: 'Lobster',          value: 'Lobster',               preview: 'Lobster, cursive',         style: 'normal',      file: '/fonts/Lobster-Regular.ttf' },
+  { label: 'Mr Dafoe',         value: 'MrDafoe',               preview: 'Mr Dafoe, cursive',        style: 'normal',      file: '/fonts/MrDafoe-Regular.ttf' },
 ];
 
 const COLORS = [
@@ -74,7 +76,7 @@ export default function App() {
   useEffect(() => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Great+Vibes&family=Playfair+Display:ital,wght@1,700&family=Cinzel:wght@700&family=Montserrat:wght@700&family=Raleway:ital,wght@1,700&family=Pacifico&family=Sacramento&family=Satisfy&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Pacifico&family=Sacramento&family=Satisfy&family=Kaushan+Script&family=Allura&family=Pinyon+Script&family=Lobster&family=Mr+Dafoe&display=swap';
     document.head.appendChild(link);
   }, []);
 
@@ -121,8 +123,7 @@ export default function App() {
 
   const renderCanvas = async (file: File) => {
     try {
-      const pdfjsLib = await import('pdfjs-dist');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.js', import.meta.url).toString();
+      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       pdfDocRef.current = pdf;
@@ -193,23 +194,17 @@ export default function App() {
       };
 
       // Cargar fuente TTF una sola vez
-      let fontBytes: ArrayBuffer | null = null;
+      let fontBytes: Uint8Array | null = null;
       if (selectedFont.file) {
-        try {
-          const res = await fetch(selectedFont.file);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const buffer = await res.arrayBuffer();
-          // Verificar que es TTF válido (primeros bytes 00 01 00 00 o 74 74 63 66)
-          const view = new DataView(buffer);
-          const magic = view.getUint32(0);
-          if (magic === 0x00010000 || magic === 0x74746366 || magic === 0x4F54544F) {
-            fontBytes = buffer;
-          } else {
-            throw new Error('Formato de fuente no válido');
-          }
-        } catch (e: any) {
-          setError(`⚠️ ${e.message}. Usando fuente clásica como alternativa.`);
+        const res = await fetch(selectedFont.file);
+        if (!res.ok) throw new Error(`No se pudo descargar la fuente ${selectedFont.label} (HTTP ${res.status})`);
+        const buffer = await res.arrayBuffer();
+        const view = new DataView(buffer);
+        const magic = view.getUint32(0);
+        if (magic !== 0x00010000 && magic !== 0x74727565 && magic !== 0x74746366 && magic !== 0x4F54544F) {
+          throw new Error(`La fuente ${selectedFont.label} no es un TTF/OTF válido`);
         }
+        fontBytes = new Uint8Array(buffer);
       }
 
       for (let i = 0; i < students.length; i++) {
@@ -221,7 +216,7 @@ export default function App() {
         let font;
         if (fontBytes) {
           pdfDoc.registerFontkit(fontkit);
-          font = await pdfDoc.embedFont(fontBytes);
+          font = await pdfDoc.embedFont(fontBytes.slice());
         } else {
           font = await pdfDoc.embedFont(
             standardFontMap[selectedFont.value] || StandardFonts.TimesRomanBoldItalic
