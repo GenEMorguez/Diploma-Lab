@@ -43,7 +43,105 @@ const fixAccents = (text: string) =>
     .replace(/Ó/g, '\u00D3').replace(/Ú/g, '\u00DA')
     .replace(/Ü/g, '\u00DC').replace(/Ñ/g, '\u00D1');
 
+const CREDENTIALS = { user: 'admin', password: 'diplomagen2026' };
+
+function LoginScreen({ onLogin }: { onLogin: () => void }) {
+  const [user, setUser] = useState('');
+  const [pass, setPass] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [showPass, setShowPass] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (user === CREDENTIALS.user && pass === CREDENTIALS.password) {
+      onLogin();
+    } else {
+      setLoginError('Usuario o contraseña incorrectos.');
+      setPass('');
+    }
+  };
+
+  const inp: React.CSSProperties = {
+    width: '100%', boxSizing: 'border-box',
+    padding: '12px 16px', border: '2px solid #e8d0d6',
+    borderRadius: '10px', fontSize: '14px',
+    fontFamily: 'monospace', outline: 'none',
+    background: '#fff', color: '#3a1020',
+  };
+
+  return (
+    <div style={{
+      minHeight: '100vh', background: 'linear-gradient(135deg,#fdf0f3 0%,#f5e6ea 100%)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <div style={{
+        background: '#fff', borderRadius: '20px', padding: '48px 40px',
+        boxShadow: '0 8px 40px rgba(122,21,51,0.13)', width: '100%', maxWidth: '400px',
+        border: '2px solid #e8d0d6',
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{
+            width: '64px', height: '64px', borderRadius: '16px',
+            background: 'linear-gradient(135deg,#7a1533,#c4748a)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 16px', fontSize: '28px',
+            boxShadow: '0 4px 16px rgba(122,21,51,0.25)',
+          }}>🎓</div>
+          <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#3a1020' }}>DiplomaGen</h1>
+          <p style={{ margin: '6px 0 0', fontSize: '13px', color: '#9a6070', fontFamily: 'monospace' }}>
+            Inicia sesión para continuar
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#7a1533', letterSpacing: '1.5px', marginBottom: '6px', fontFamily: 'monospace' }}>
+              USUARIO
+            </label>
+            <input type="text" value={user} autoComplete="username"
+              onChange={e => { setUser(e.target.value); setLoginError(''); }}
+              placeholder="admin" style={inp} />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#7a1533', letterSpacing: '1.5px', marginBottom: '6px', fontFamily: 'monospace' }}>
+              CONTRASEÑA
+            </label>
+            <div style={{ position: 'relative' }}>
+              <input type={showPass ? 'text' : 'password'} value={pass} autoComplete="current-password"
+                onChange={e => { setPass(e.target.value); setLoginError(''); }}
+                placeholder="••••••••••••" style={{ ...inp, paddingRight: '44px' }} />
+              <button type="button" onClick={() => setShowPass(v => !v)} style={{
+                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#9a6070',
+              }}>{showPass ? '🙈' : '👁'}</button>
+            </div>
+          </div>
+
+          {loginError && (
+            <div style={{
+              background: '#fde8ec', border: '1px solid #f5b8c4', borderRadius: '8px',
+              padding: '10px 14px', color: '#9b1c2e', fontSize: '13px', fontWeight: 600, fontFamily: 'monospace',
+            }}>⚠️ {loginError}</div>
+          )}
+
+          <button type="submit" style={{
+            width: '100%', background: 'linear-gradient(135deg,#7a1533,#c4748a)',
+            color: '#fff', border: 'none', borderRadius: '12px', padding: '14px',
+            fontFamily: 'monospace', fontSize: '14px', fontWeight: 700,
+            cursor: 'pointer', letterSpacing: '2px',
+            boxShadow: '0 4px 16px rgba(122,21,51,0.3)', marginTop: '4px',
+          }}>
+            INGRESAR →
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  const [authenticated, setAuthenticated] = useState(false);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfName, setPdfName] = useState('');
   const [students, setStudents] = useState<any[]>([]);
@@ -261,6 +359,10 @@ export default function App() {
   const labelStyle: React.CSSProperties = { display: 'block', color: '#5a3a42', fontSize: '13px', marginBottom: '6px', fontWeight: '700' };
   const inp: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: '#fff', border: '2px solid #c4748a', borderRadius: '8px', padding: '10px 12px', color: '#1a0a0e', fontSize: '14px', outline: 'none' };
 
+  if (!authenticated) {
+    return <LoginScreen onLogin={() => setAuthenticated(true)} />;
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: '#f7f0f2' }}>
       <style>{`
@@ -283,11 +385,23 @@ export default function App() {
           <div style={{ color: '#7a1533', fontSize: '20px', fontWeight: '700', fontFamily: 'Georgia, serif' }}>DiplomaGen</div>
           <div style={{ color: '#9a6070', fontSize: '10px', letterSpacing: '2px', fontFamily: 'monospace' }}>UAdeO · GENERADOR DE DIPLOMADOS</div>
         </div>
-        {students.length > 0 && (
-          <div style={{ marginLeft: 'auto', background: '#fdf5f7', border: '1px solid #e8d0d6', borderRadius: '20px', padding: '6px 14px', color: '#7a1533', fontSize: '12px', fontFamily: 'monospace', fontWeight: '700' }}>
-            {students.length} estudiantes cargados
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {students.length > 0 && (
+            <div style={{ background: '#fdf5f7', border: '1px solid #e8d0d6', borderRadius: '20px', padding: '6px 14px', color: '#7a1533', fontSize: '12px', fontFamily: 'monospace', fontWeight: '700' }}>
+              {students.length} estudiantes cargados
+            </div>
+          )}
+          <div style={{ background: '#fdf5f7', border: '1px solid #e8d0d6', borderRadius: '20px', padding: '6px 14px', color: '#7a1533', fontSize: '12px', fontFamily: 'monospace' }}>
+            👤 admin
           </div>
-        )}
+          <button onClick={() => setAuthenticated(false)} style={{
+            background: 'none', border: '2px solid #e8d0d6', borderRadius: '20px',
+            padding: '6px 14px', color: '#9a6070', fontSize: '12px', fontFamily: 'monospace',
+            cursor: 'pointer', fontWeight: '700',
+          }}>
+            SALIR ×
+          </button>
+        </div>
       </div>
 
       <div style={{ maxWidth: '1100px', margin: '40px auto', padding: '0 24px 60px' }}>
